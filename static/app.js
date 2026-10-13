@@ -764,12 +764,15 @@ async function run() {
     const data = await resp.json().catch(() => ({}));
     const latency = Math.round(performance.now() - t0);
     if (!resp.ok) {
-      showError(data.error || data.detail || `HTTP ${resp.status}`, latency);
+      const noBackend = resp.status === 404 && !data.error && !data.detail;
+      showError(data.error || data.detail || (noBackend
+        ? "No backend on this origin — this is the static playground (GitHub Pages). Run decisions with ./run.sh locally, or deploy the token-holding proxy in deploy/ (README → Hosting)."
+        : `HTTP ${resp.status}`), latency);
       return;
     }
     renderResults(data, payload.questions, latency);
   } catch (err) {
-    showError(`Request failed: ${err.message}`);
+    showError(`Request failed: ${err.message}. On the GitHub Pages playground there is no backend — use ./run.sh locally or deploy/ (README → Hosting).`);
   } finally {
     btn.disabled = false;
     btn.textContent = "Run";

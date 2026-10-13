@@ -1,0 +1,8 @@
+name = "decision-model-frontend"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# Serve the UI from this worker, same origin as the /v1/ proxy
+[assets]
+directory = "../static"
+binding = "ASSETS"

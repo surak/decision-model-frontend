@@ -93,6 +93,25 @@ Question types:
 Response shape: `{ "model", "answers": { <question_id>: {...} }, "usage": { "input_tokens", "output_tokens" } }`.
 The UI renders each answer type with probability bars and shows the raw JSON underneath.
 
+## Hosting
+
+Live on GitHub Pages: **https://surak.github.io/decision-model-frontend/** — built
+from `static/` by `.github/workflows/pages.yml` on every push to `main`.
+
+Pages is UI-only: the decision API needs a real backend because the upstream
+gateway sends no CORS headers and the auth token must never reach the browser.
+Three levels of deployment:
+
+1. **Showcase (what Pages gives you)**: presets, builder and rendering all work;
+   the Run button shows instructions instead of a call.
+2. **Local full app**: `./run.sh` and open http://127.0.0.1:8787 — token stays in
+   gitignored `.env`, server-side.
+3. **Public full app**: `deploy/` is a Cloudflare Worker holding the token as a
+   `CLEF_TOKEN` secret, serving `static/` and proxying `/v1/*` same-origin (the
+   UI works unmodified). `cd deploy && wrangler deploy && wrangler secret put
+   CLEF_TOKEN`. Anyone who reaches the worker can spend your quota — put Cloudflare
+   Access or a rate limit in front of it before sharing the link.
+
 ## Layout
 
 ```
