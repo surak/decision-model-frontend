@@ -115,7 +115,10 @@ def main():
     if not Handler.api_token:
         print("WARNING: CLEF_API_TOKEN is not set — proxied calls will likely get 401.", file=sys.stderr)
 
-    server = ThreadingHTTPServer((args.host, args.port), Handler)
+    try:
+        server = ThreadingHTTPServer((args.host, args.port), Handler)
+    except OSError as exc:
+        sys.exit(f"Cannot bind {args.host}:{args.port} ({exc}) — is another instance running? Try ./run.sh --port 8788")
     print(f"decision-model-frontend on http://{args.host}:{args.port} -> {Handler.api_base}")
     try:
         server.serve_forever()

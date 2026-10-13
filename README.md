@@ -10,10 +10,11 @@ Default backend: the BlaBlador gateway (`https://api.blablador.fz-juelich.de/v1/
 ## Quickstart
 
 ```sh
-cp .env.example .env   # fill in CLEF_API_TOKEN
-uv run python server.py
+./run.sh               # first run creates .env from .env.example — fill in CLEF_API_TOKEN
 open http://127.0.0.1:8787
 ```
+
+`run.sh` bootstraps `.env` and starts `server.py`; any extra flags (e.g. `--port 8788`) pass straight through.
 
 `server.py` serves the UI (from `static/`) and proxies `/v1/*` to the upstream
 API. The proxy exists because the upstream sends no CORS headers and the API
@@ -63,6 +64,7 @@ The UI renders each answer type with probability bars and shows the raw JSON und
 ## Layout
 
 ```
+run.sh            one-shot start: bootstraps .env, runs server.py
 server.py         stdlib HTTP server: static files + /v1/* proxy (no deps)
 static/index.html UI shell
 static/app.js     question builder + result rendering
