@@ -16,6 +16,19 @@ open http://127.0.0.1:8787
 
 `run.sh` bootstraps `.env` and starts `server.py`; any extra flags (e.g. `--port 8788`) pass straight through.
 
+## Example presets
+
+The UI ships with 8 presets covering the model's three question types:
+
+- **LLM router** — picks the model for a request out of the 14 live BlaBlador models (`/v1/models` lineup: GPT-OSS, MiniMax-M2.7, Qwen3.8 family, EVE-Instruct, GLM-5.3, Kimi-K3, DeepSeek-V4.1, MiMo-V2.6, Apertus, Muse Glimmer, Kolibri-1)
+- **Tool router** — which service family runs a pipeline step (chat LLM / decision model / PII anonymizer / image gen / speech-to-text / embeddings)
+- **Route selection** — fast vs. heavy capability tier for a coding request
+- **Support triage** — noul + choice + score together (urgency, team, severity)
+- **SLURM failure triage** — user error vs. OOM vs. transient infra vs. framework bug, restartability, severity
+- **Prompt-injection detector** — yes/no + attack pattern + severity score
+- **Email triage** — does it need a reply, urgency score, next action
+- **Blank starter**
+
 `server.py` serves the UI (from `static/`) and proxies `/v1/*` to the upstream
 API. The proxy exists because the upstream sends no CORS headers and the API
 token must stay out of the browser.
