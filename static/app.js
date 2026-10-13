@@ -756,23 +756,32 @@ async function run() {
   btn.textContent = "Running…";
   const t0 = performance.now();
   try {
-    const resp = await fetch("/v1/systemone", {
+    const endpoint = $("#api-endpoint").value.trim() || API_DEFAULT_LOCAL;
+    const token = $("#api-token").value.trim();
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const resp = await fetch(endpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(payload),
     });
     const data = await resp.json().catch(() => ({}));
     const latency = Math.round(performance.now() - t0);
     if (!resp.ok) {
-      const noBackend = resp.status === 404 && !data.error && !data.detail;
-      showError(data.error || data.detail || (noBackend
-        ? "No backend on this origin — this is the static playground (GitHub Pages). Run decisions with ./run.sh locally, or deploy the token-holding proxy in deploy/ (README → Hosting)."
-        : `HTTP ${resp.status}`), latency);
+      const errText = (data.error && (data.error.message || String(data.error))) || data.detail || null;
+      const silent = !errText;
+      const authErr = silent && (resp.status === 401 || resp.status === 403);
+      const noBackend = silent && resp.status === 404;
+      showError(errText || (authErr
+        ? `API rejected the request (HTTP ${resp.status}) — check the API token field above.`
+        : noBackend
+          ? "Nothing answered at this endpoint — check the API endpoint field above. Cross-origin calls need CORS on the API (README → CORS on the API); a local ./run.sh server needs none of that."
+          : `HTTP ${resp.status}`), latency);
       return;
     }
     renderResults(data, payload.questions, latency);
   } catch (err) {
-    showError(`Request failed: ${err.message}. On the GitHub Pages playground there is no backend — use ./run.sh locally or deploy/ (README → Hosting).`);
+    showError(`Request failed: ${err.message}. If this is a cross-origin call, the API must allow CORS (README → CORS on the API); a local ./run.sh server avoids the issue.`);
   } finally {
     btn.disabled = false;
     btn.textContent = "Run";
@@ -890,6 +899,37 @@ function maxKey(obj) {
   return Object.entries(obj).sort((a, b) => b[1] - a[1])[0]?.[0];
 }
 
+/* ---------- api settings ---------- */
+
+const API_DEFAULT_REMOTE = "https://api.blablador.fz-juelich.de/v1/systemone";
+const API_DEFAULT_LOCAL = "/v1/systemone";
+
+function storageGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function storageSet(k, v) { try { localStorage.setItem(k, v); } catch {} }
+function storageDel(k) { try { localStorage.removeItem(k); } catch {} }
+
+function defaultEndpoint() {
+  const host = window.location.hostname;
+  return ["localhost", "127.0.0.1", ""].includes(host) ? API_DEFAULT_LOCAL : API_DEFAULT_REMOTE;
+}
+
+function loadApiSettings() {
+  $("#api-endpoint").value = storageGet("dm_endpoint") || defaultEndpoint();
+  const savedToken = storageGet("dm_token");
+  if (savedToken) {
+    $("#api-token").value = savedToken;
+    $("#api-remember").checked = true;
+  }
+  const save = () => {
+    storageSet("dm_endpoint", $("#api-endpoint").value.trim());
+    if ($("#api-remember").checked) storageSet("dm_token", $("#api-token").value.trim());
+    else storageDel("dm_token");
+  };
+  $("#api-endpoint").addEventListener("change", save);
+  $("#api-token").addEventListener("change", save);
+  $("#api-remember").addEventListener("change", save);
+}
+
 /* ---------- presets + init ---------- */
 
 function applyPreset(preset) {
@@ -906,6 +946,7 @@ function applyPreset(preset) {
 }
 
 function init() {
+  loadApiSettings();
   const select = $("#preset");
   PRESETS.forEach((p, i) => {
     const opt = document.createElement("option");

@@ -114,22 +114,67 @@ The UI renders each answer type with probability bars and shows the raw JSON und
 
 ## Hosting
 
-Live on GitHub Pages: **https://surak.github.io/decision-model-frontend/** — built
-from `static/` by `.github/workflows/pages.yml` on every push to `main`.
+The page is pure static and does all request processing client-side: it assembles
+the state + questions and POSTs them straight to the decision API with **the
+user's own token** (pasted in the token field; kept in memory unless "remember on
+this device" is ticked). No inference runs in the browser — the decision call is
+always the remote API.
 
-Pages is UI-only: the decision API needs a real backend because the upstream
-gateway sends no CORS headers and the auth token must never reach the browser.
-Three levels of deployment:
+Works from any static host:
 
-1. **Showcase (what Pages gives you)**: presets, builder and rendering all work;
-   the Run button shows instructions instead of a call.
-2. **Local full app**: `./run.sh` and open http://127.0.0.1:8787 — token stays in
-   gitignored `.env`, server-side.
-3. **Public full app**: `deploy/` is a Cloudflare Worker holding the token as a
-   `CLEF_TOKEN` secret, serving `static/` and proxying `/v1/*` same-origin (the
-   UI works unmodified). `cd deploy && wrangler deploy && wrangler secret put
-   CLEF_TOKEN`. Anyone who reaches the worker can spend your quota — put Cloudflare
-   Access or a rate limit in front of it before sharing the link.
+- GitHub Pages: https://surak.github.io/decision-model-frontend/
+- GitLab Pages: this repo ships `.gitlab-ci.yml`, which publishes `static/` as the
+  site root — push the repo to any GitLab with Pages and it just works.
+
+For direct cross-origin calls the API must send CORS headers allowing your page
+origin and the `Authorization` header — see below.
+
+Two optional setups hide the token from users entirely (server-side):
+
+- `./run.sh` — local server, token in gitignored `.env`, http://127.0.0.1:8787
+  (endpoint: `/v1/systemone`).
+- `deploy/` — Cloudflare Worker doing the same publicly (`wrangler deploy` +
+  `wrangler secret put CLEF_TOKEN`) — put Access control or a rate limit in front.
+
+## CORS on the API (Apache)
+
+The browser refuses responses without CORS headers, and it *preflights* any
+request carrying `Authorization` (as this frontend sends). In the vhost serving
+the API (e.g. `/etc/apache2/sites-available/<api-vhost>.conf`, then `a2enmod
+headers rewrite`, `apache2ctl configtest && systemctl reload apache2`):
+
+```apache
+Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+Header always set Access-Control-Allow-Headers "Authorization, Content-Type"
+Header always set Access-Control-Max-Age "600"
+Header always append Vary "Origin"
+
+# allow exactly the origins hosting the frontend (uncomment the echo-any line otherwise):
+SetEnvIf Origin "^https://(surak\.github\.io|[a-z0-9.-]+\.gitlab\.io)$" CORS_ORIGIN=$1
+# SetEnvIf Origin "(.+)" CORS_ORIGIN=$1
+Header always set Access-Control-Allow-Origin "%{CORS_ORIGIN}e" env=CORS_ORIGIN
+
+# answer the preflight with 204 here — never forward OPTIONS to the app
+RewriteEngine On
+RewriteCond %{REQUEST_METHOD} OPTIONS
+RewriteRule ^ - [R=204,L]
+```
+
+`Authorization` belongs in `Access-Control-Allow-Headers` — CORS is not
+authentication; it just tells the browser the token-carrying request is allowed.
+No `Allow-Credentials` needed for Bearer tokens. If a TLS-terminating proxy sits
+in front (openresty/nginx here), plain pass-through is fine — the inner vhost's
+headers reach the browser unchanged.
+
+Verify:
+
+```bash
+curl -si -X OPTIONS -H "Origin: https://surak.github.io" \
+  -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: authorization,content-type" \
+  https://api.blablador.fz-juelich.de/v1/systemone | head -8   # expect 204 + Allow-* headers
+curl -si -H "Origin: https://surak.github.io" \
+  https://api.blablador.fz-juelich.de/v1/models | grep -i access-control
+```
 
 ## Layout
 

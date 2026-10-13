@@ -17,6 +17,15 @@
   <main>
     <section class="panel" id="builder">
       <div class="row">
+        <label for="api-endpoint">API endpoint</label>
+        <input id="api-endpoint" spellcheck="false" placeholder="/v1/systemone (local proxy) or full URL">
+      </div>
+      <div class="row">
+        <label for="api-token">API token</label>
+        <input id="api-token" type="password" autocomplete="off" spellcheck="false" placeholder="paste your own token — sent as Bearer, stays in your browser">
+        <label class="hint"><input type="checkbox" id="api-remember"> remember on this device</label>
+      </div>
+      <div class="row">
         <label for="model">Model</label>
         <input id="model" spellcheck="false">
       </div>
