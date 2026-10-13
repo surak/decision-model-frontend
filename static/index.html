@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Decision Models — Clef frontend</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Decision Models</h1>
+    <p class="subtitle">Frontend for typed decision models like
+      <a href="https://blog.cloudflare.com/clef-decision-models/">Clef</a>:
+      a state and typed questions in, probabilities for every option out.</p>
+  </header>
+
+  <main>
+    <section class="panel" id="builder">
+      <div class="row">
+        <label for="model">Model</label>
+        <input id="model" spellcheck="false">
+      </div>
+
+      <div class="row">
+        <label for="preset">Preset</label>
+        <select id="preset"></select>
+      </div>
+
+      <div class="row">
+        <div class="row-head">
+          <label for="state">State</label>
+          <select id="state-mode" title="How to send the state">
+            <option value="text">text</option>
+            <option value="json">JSON</option>
+          </select>
+        </div>
+        <textarea id="state" rows="8" placeholder="The content to evaluate — text or structured data."></textarea>
+      </div>
+
+      <div class="row">
+        <div class="row-head">
+          <label>Questions</label>
+          <span class="hint" id="q-count"></span>
+        </div>
+        <div id="questions"></div>
+        <button id="add-question" class="ghost">+ Add question</button>
+      </div>
+
+      <button id="run">Run</button>
+    </section>
+
+    <section class="panel" id="results">
+      <h2>Results</h2>
+      <div id="result-body">
+        <p class="empty">Run a decision to see typed answers with per-option probabilities.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
