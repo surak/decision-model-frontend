@@ -18,8 +18,13 @@ open http://127.0.0.1:8787
 
 ## Example presets
 
-The UI ships with 16 presets covering the model's three question types:
+The UI ships with 27 presets covering the model's three question types:
 
+- **Hello world: spam or not?** — the smallest possible decision model: one noul question
+- **Hello world: review sentiment** — one score question (Negative / Neutral / Positive)
+- **Hello world: which language?** — one choice question with 5 options
+- **Hello world: fruit basket** — a toy choice so the mechanics are obvious
+- **Hello world: take an umbrella?** — daily-life noul
 - **LLM router** — picks the model for a request out of the 14 live BlaBlador models (`/v1/models` lineup: GPT-OSS, MiniMax-M2.7, Qwen3.8 family, EVE-Instruct, GLM-5.3, Kimi-K3, DeepSeek-V4.1, MiMo-V2.6, Apertus, Muse Glimmer, Kolibri-1)
 - **Tool router** — which service family runs a pipeline step (chat LLM / decision model / PII anonymizer / image gen / speech-to-text / embeddings)
 - **Route selection** — fast vs. heavy capability tier for a coding request
@@ -35,6 +40,12 @@ The UI ships with 16 presets covering the model's three question types:
 - **Flaky vs real test failure** — flaky (noul), root cause, fix action (rerun / quarantine / fix test / fix code)
 - **SLURM pre-flight** — safe to submit (noul), tightness score, likely bottleneck (GPU mem / time / CPU / IO / quota)
 - **Content moderation** — safe to publish (noul), policy category, severity score
+- **Business: expense report approval** — approve as-is, issue (over limit / missing receipts / suspicious), handling score
+- **Business: sales lead scoring** — Cold/Warm/Hot score, prioritize today (noul), owner routing
+- **Business: refund decision** — grant (noul), action (full / partial / credit / deny), trust score
+- **Business: contract clause risk** — risky (noul), clause area (termination / liability / IP...), escalation score
+- **Business: meeting or async?** — needs live meeting (noul), right format, prep score
+- **Business: job application routing** — role fit choice, seniority score, worth a call (noul)
 - **Blank starter**
 
 `server.py` serves the UI (from `static/`) and proxies `/v1/*` to the upstream

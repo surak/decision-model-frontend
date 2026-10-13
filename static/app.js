@@ -7,6 +7,73 @@ const MAX_QUESTIONS = 64; // input schema limit of the decision models
 
 const PRESETS = [
   {
+    name: "Hello world: spam or not?",
+    model: "alias-clef",
+    stateMode: "text",
+    state: "WINNER!! You have been selected for a EUR 5,000,000 prize!!! Click hxxp://totally-legit.example right now now now and send your bank details to claim!!!",
+    questions: {
+      spam: { type: "noul", instructions: "Is this email spam?" },
+    },
+  },
+  {
+    name: "Hello world: review sentiment",
+    model: "alias-clef",
+    stateMode: "text",
+    state: "The espresso arrived cold and the waiter forgot our order twice. Beautiful view, though.",
+    questions: {
+      sentiment: {
+        type: "score",
+        instructions: "What is the sentiment of this review?",
+        criteria: ["Negative", "Neutral", "Positive"],
+      },
+    },
+  },
+  {
+    name: "Hello world: which language?",
+    model: "alias-clef",
+    stateMode: "text",
+    state: "Bom dia! Fiz o cafe, esta na mesa.",
+    questions: {
+      language: {
+        type: "choice",
+        instructions: "Which language is this?",
+        criteria: {
+          english: "English",
+          german: "German",
+          portuguese: "Portuguese",
+          chinese: "Chinese",
+          other: "None of the above",
+        },
+      },
+    },
+  },
+  {
+    name: "Hello world: fruit basket",
+    model: "alias-clef",
+    stateMode: "text",
+    state: "This fruit is curved, yellow, and monkeys love it.",
+    questions: {
+      fruit: {
+        type: "choice",
+        instructions: "Which fruit is it?",
+        criteria: {
+          banana: "Curved yellow fruit.",
+          apple: "Round, often red or green.",
+          orange: "Round citrus with orange peel.",
+        },
+      },
+    },
+  },
+  {
+    name: "Hello world: take an umbrella?",
+    model: "alias-clef",
+    stateMode: "text",
+    state: "Weather report: 90% chance of heavy rain this afternoon, 12C, gusty wind.",
+    questions: {
+      take_umbrella: { type: "noul", instructions: "Should I take an umbrella?" },
+    },
+  },
+  {
     name: "LLM router — pick the model for this request",
     model: "alias-clef",
     stateMode: "text",
@@ -373,6 +440,155 @@ const PRESETS = [
         instructions: "How urgent is moderation?",
         criteria: ["Benign", "Borderline", "Remove now"],
       },
+    },
+  },
+  {
+    name: "Business: expense report approval",
+    model: "alias-clef",
+    stateMode: "json",
+    state: '{"employee": "junior consultant", "claim": {"hotel": 480, "dinner": 145, "taxi": 60}, "policy": "hotel cap 120/night, dinner cap 40/person, receipts required", "receipts": "hotel receipt missing"}',
+    questions: {
+      approve: { type: "noul", instructions: "Should this expense claim be approved as-is?" },
+      issue: {
+        type: "choice",
+        instructions: "What is the main issue, if any?",
+        criteria: {
+          policy_ok: "Everything within policy.",
+          over_limit: "Line items exceed policy caps.",
+          missing_receipts: "Required receipts are missing.",
+          wrong_cost_center: "Charged to the wrong project.",
+          suspicious_pattern: "Pattern looks like padding or duplicates.",
+        },
+      },
+      action: {
+        type: "score",
+        instructions: "How should this claim be handled?",
+        criteria: ["Auto approve", "Manager review", "Audit now"],
+      },
+    },
+  },
+  {
+    name: "Business: sales lead scoring",
+    model: "alias-clef",
+    stateMode: "text",
+    state: "Inbound form: 'We run 3 data centers and are evaluating LLM inference stacks for 2027. Budget approved. Timeline: this quarter. Currently with competitor X.'",
+    questions: {
+      temperature: {
+        type: "score",
+        instructions: "How hot is this lead?",
+        criteria: ["Cold", "Warm", "Hot"],
+      },
+      prioritize: { type: "noul", instructions: "Should this lead be prioritized today?" },
+      owner: {
+        type: "choice",
+        instructions: "Who should own it?",
+        criteria: {
+          inbound_sales: "Standard inbound follow-up.",
+          outbound_sales: "Worth an outbound push.",
+          partner_manager: "Route through partners.",
+          discard: "Not a real opportunity.",
+        },
+      },
+    },
+  },
+  {
+    name: "Business: refund decision",
+    model: "alias-clef",
+    stateMode: "json",
+    state: '{"order": "A-77123", "customer_history": "3 years, 41 orders, 1 previous refund", "request": "Full refund of 299 EUR for a jacket returned after 45 days, tags removed, reason: changed my mind"}',
+    questions: {
+      approve: { type: "noul", instructions: "Should any refund be granted?" },
+      action: {
+        type: "choice",
+        instructions: "What should the refund action be?",
+        criteria: {
+          full_refund: "Full refund.",
+          partial_refund: "Partial refund with restocking fee.",
+          store_credit: "Store credit only.",
+          deny: "Deny the request.",
+        },
+      },
+      trust: {
+        type: "score",
+        instructions: "How trustworthy is this return?",
+        criteria: ["Trusted customer", "Watch", "Abuse risk"],
+      },
+    },
+  },
+  {
+    name: "Business: contract clause risk",
+    model: "alias-clef",
+    stateMode: "text",
+    state: "Clause 9.2: vendor may terminate for convenience with 5 days notice; buyer liability capped at 12 months fees EXCEPT data breach (uncapped); IP created in the project stays with vendor.",
+    questions: {
+      risky: { type: "noul", instructions: "Does this contract text contain a clause the company should worry about?" },
+      clause: {
+        type: "choice",
+        instructions: "Which clause area is the problem?",
+        criteria: {
+          termination: "Termination and exit terms.",
+          liability: "Liability caps and carve-outs.",
+          ip_ownership: "IP ownership and assignment.",
+          confidentiality: "Confidentiality and NDA scope.",
+          payment_terms: "Payment terms, late fees, indexation.",
+          none: "Nothing problematic.",
+        },
+      },
+      severity: {
+        type: "score",
+        instructions: "How far should this escalate?",
+        criteria: ["Nitpick", "Negotiate", "Send to legal now"],
+      },
+    },
+  },
+  {
+    name: "Business: meeting or async?",
+    model: "alias-clef",
+    stateMode: "text",
+    state: "Weekly status sync invite: 12 people, 45 minutes, recurring. Last week's agenda was 'updates from everyone'.",
+    questions: {
+      needs_meeting: { type: "noul", instructions: "Does this really need a live meeting?" },
+      format: {
+        type: "choice",
+        instructions: "What is the right format instead?",
+        criteria: {
+          email: "One email answers it.",
+          async_doc: "Async doc or thread with comments.",
+          meeting: "Short live meeting with a tight agenda.",
+          call: "Quick 1:1 call.",
+        },
+      },
+      prep: {
+        type: "score",
+        instructions: "If it happens live, what prep does it need?",
+        criteria: ["No prep", "Agenda", "Full deck"],
+      },
+    },
+  },
+  {
+    name: "Business: job application routing",
+    model: "alias-clef",
+    stateMode: "text",
+    state: "Application: 2 years backend Python, some Kubernetes, one paper on retrieval-augmented QA, says 'I built an internal tool'. Wants remote.",
+    questions: {
+      role_match: {
+        type: "choice",
+        instructions: "Which role does this application fit best?",
+        criteria: {
+          ml_engineer: "ML/LLM engineering.",
+          backend: "Backend and infrastructure.",
+          frontend: "Frontend/product.",
+          research: "Research scientist.",
+          support: "Support and solutions.",
+          no_fit: "No fitting opening.",
+        },
+      },
+      seniority: {
+        type: "score",
+        instructions: "What seniority level does this profile suggest?",
+        criteria: ["Junior", "Mid", "Senior"],
+      },
+      worth_call: { type: "noul", instructions: "Should a recruiter call this candidate?" },
     },
   },
   {
