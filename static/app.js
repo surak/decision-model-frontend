@@ -232,6 +232,10 @@ async function run() {
 
 /* ---------- results ---------- */
 
+function clearResults() {
+  $("#result-body").innerHTML = '<p class="empty">Run a decision to see typed answers with per-option probabilities.</p>';
+}
+
 function showError(msg, latency) {
   $("#result-body").innerHTML = "";
   const box = document.createElement("div");
@@ -349,6 +353,7 @@ function applyPreset(preset) {
     box.appendChild(buildQuestionCard({ id, ...q }));
   }
   updateCount();
+  clearResults();
 }
 
 function init() {
