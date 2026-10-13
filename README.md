@@ -162,7 +162,13 @@ RewriteRule ^ - [R=204,L]
 
 `Authorization` belongs in `Access-Control-Allow-Headers` — CORS is not
 authentication; it just tells the browser the token-carrying request is allowed.
-No `Allow-Credentials` needed for Bearer tokens. If a TLS-terminating proxy sits
+No `Allow-Credentials` needed for Bearer tokens.
+
+Two traps that die before CORS even matters (Safari reports both as "Load failed"):
+an https page cannot call an `http://` **non-loopback** URL (mixed content), and a
+page opened as `file://` cannot fetch at all — serve the UI with `./run.sh`. Also
+note a `file://` page sends `Origin: null`; the echo-any CORS variant covers it,
+the pinned-origins line does not. If a TLS-terminating proxy sits
 in front (openresty/nginx here), plain pass-through is fine — the inner vhost's
 headers reach the browser unchanged.
 

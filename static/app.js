@@ -781,7 +781,14 @@ async function run() {
     }
     renderResults(data, payload.questions, latency);
   } catch (err) {
-    showError(`Request failed: ${err.message}. If this is a cross-origin call, the API must allow CORS (README → CORS on the API); a local ./run.sh server avoids the issue.`);
+    const attempted = new URL($("#api-endpoint").value.trim() || API_DEFAULT_LOCAL, location.href).href;
+    showError([
+      `Request failed: ${err.message}`,
+      `POST ${attempted} from page origin ${location.origin}`,
+      location.protocol === "file:"
+        ? "You opened index.html as a file (file://) — fetch cannot reach any server this way. Run ./run.sh and open http://127.0.0.1:8787."
+        : "Check the API endpoint field above. Cross-origin calls need CORS on the API (README -> CORS on the API); same-origin /v1/systemone via ./run.sh needs nothing. An https page also cannot call an http:// non-loopback URL at all (browser mixed-content block).",
+    ].join("\n"));
   } finally {
     btn.disabled = false;
     btn.textContent = "Run";
@@ -946,6 +953,12 @@ function applyPreset(preset) {
 }
 
 function init() {
+  if (location.protocol === "file:") {
+    const warn = document.createElement("p");
+    warn.className = "error";
+    warn.textContent = "Opened as a file (file://) — requests cannot work from here. Run ./run.sh and open http://127.0.0.1:8787.";
+    document.querySelector("header").appendChild(warn);
+  }
   loadApiSettings();
   const select = $("#preset");
   PRESETS.forEach((p, i) => {
