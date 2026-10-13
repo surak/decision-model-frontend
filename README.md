@@ -48,6 +48,25 @@ The UI ships with 27 presets covering the model's three question types:
 - **Business: job application routing** — role fit choice, seniority score, worth a call (noul)
 - **Blank starter**
 
+## Throughput benchmark
+
+`bench_throughput.py` measures how many decisions per second the API really
+does, using the UI presets above as workloads (extracted verbatim from
+`static/app.js`):
+
+```sh
+uv run python bench_throughput.py                      # full run: sweep + ramp 1→32
+uv run python bench_throughput.py --concurrencies 1 8 32 --duration 20
+```
+
+Phase 1 sends every preset sequentially a couple of times (per-preset latency,
+also warms the model). Phase 2 drives mixed presets round-robin at each
+concurrency level for `--duration` seconds and reports req/s, p50/p95 latency
+and input tok/s. Connections are kept alive (one per load thread) so TLS
+handshakes don't pollute the numbers. Reading the ramp: if req/s stays flat
+while concurrency grows and latency scales linearly, the backend is serving
+requests serially — concurrency is only buying queueing.
+
 `server.py` serves the UI (from `static/`) and proxies `/v1/*` to the upstream
 API. The proxy exists because the upstream sends no CORS headers and the API
 token must stay out of the browser.
@@ -117,6 +136,7 @@ Three levels of deployment:
 ```
 run.sh            one-shot start: bootstraps .env, runs server.py
 server.py         stdlib HTTP server: static files + /v1/* proxy (no deps)
+bench_throughput.py  decisions/sec benchmark against /v1/systemone (presets as workloads)
 static/index.html UI shell
 static/app.js     question builder + result rendering
 static/style.css  styling
