@@ -18,7 +18,7 @@ open http://127.0.0.1:8787
 
 ## Example presets
 
-The UI ships with 8 presets covering the model's three question types:
+The UI ships with 16 presets covering the model's three question types:
 
 - **LLM router** — picks the model for a request out of the 14 live BlaBlador models (`/v1/models` lineup: GPT-OSS, MiniMax-M2.7, Qwen3.8 family, EVE-Instruct, GLM-5.3, Kimi-K3, DeepSeek-V4.1, MiMo-V2.6, Apertus, Muse Glimmer, Kolibri-1)
 - **Tool router** — which service family runs a pipeline step (chat LLM / decision model / PII anonymizer / image gen / speech-to-text / embeddings)
@@ -27,6 +27,14 @@ The UI ships with 8 presets covering the model's three question types:
 - **SLURM failure triage** — user error vs. OOM vs. transient infra vs. framework bug, restartability, severity
 - **Prompt-injection detector** — yes/no + attack pattern + severity score
 - **Email triage** — does it need a reply, urgency score, next action
+- **GitHub issue triage** — bug/feature/question/infra/docs label, priority score, needs a reproduction?
+- **PR merge gate** — merge as-is (noul), review depth (rubber stamp / normal / deep dive), risk score
+- **Incident severity & paging** — SEV score, page the on-call (noul), first move (rollback / restart / scale / upstream / watch)
+- **GDPR / DSGVO classification** — personal data (noul), category (identity / health / financial / location...), sensitivity score
+- **ML experiment: what next?** — more data / tune / fix bug / scale / ship / abandon, confidence score, needs GPU allocation
+- **Flaky vs real test failure** — flaky (noul), root cause, fix action (rerun / quarantine / fix test / fix code)
+- **SLURM pre-flight** — safe to submit (noul), tightness score, likely bottleneck (GPU mem / time / CPU / IO / quota)
+- **Content moderation** — safe to publish (noul), policy category, severity score
 - **Blank starter**
 
 `server.py` serves the UI (from `static/`) and proxies `/v1/*` to the upstream

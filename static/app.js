@@ -167,6 +167,215 @@ const PRESETS = [
     },
   },
   {
+    name: "GitHub issue triage",
+    model: "alias-clef",
+    stateMode: "text",
+    state: "Title: vLLM worker crashes with 'WorkerProc initialization failed' on MiMo-V2.6-Flash-RL. Body: vLLM 0.20.0, 8x A100, V1 engine ignores VLLM_USE_V1=0. FastChat repo. No reproduction script attached.",
+    questions: {
+      label: {
+        type: "choice",
+        instructions: "What kind of issue is this?",
+        criteria: {
+          bug: "Something is broken — a defect report.",
+          feature_request: "Asks for new capability.",
+          question: "Usage question or misunderstanding.",
+          infra: "Cluster, network, or account problem, not the code.",
+          docs: "Documentation gap or error.",
+        },
+      },
+      priority: {
+        type: "score",
+        instructions: "How urgent is this issue?",
+        criteria: ["Low", "Normal", "High", "Critical"],
+      },
+      needs_repro: { type: "noul", instructions: "Must a clearer reproduction be obtained before this can be worked on?" },
+    },
+  },
+  {
+    name: "PR merge gate",
+    model: "alias-clef",
+    stateMode: "text",
+    state: "Diff: +412/-38 across serve.py and engine/core.py. Description: 'quick fix for KV cache race'. Touches locking in block_manager. No new tests. CI green. Author is new to the repo.",
+    questions: {
+      merge_worthy: { type: "noul", instructions: "Is this PR safe to merge as-is?" },
+      review_depth: {
+        type: "choice",
+        instructions: "How hard must this be reviewed?",
+        criteria: {
+          rubber_stamp: "Trivial diff, no risk — approve immediately.",
+          normal: "Standard review of correctness and style.",
+          deep_dive: "Concurrency, performance, or security implications — line-by-line review plus benchmarks.",
+        },
+      },
+      risk: {
+        type: "score",
+        instructions: "How bad can it get if this is wrong?",
+        criteria: ["Cosmetic only", "Regression possible", "Data loss or outage possible"],
+      },
+    },
+  },
+  {
+    name: "Incident severity & paging",
+    model: "alias-clef",
+    stateMode: "json",
+    state: '{"service": "synapse_server", "log_excerpt": "backend timeout burst: 231x HTTP 502 in 60s, p99 latency 8.4s, upstream read timeouts"}',
+    questions: {
+      sev: {
+        type: "score",
+        instructions: "How severe is this incident?",
+        criteria: ["SEV3 minor", "SEV2 degraded", "SEV1 major outage"],
+      },
+      page_oncall: { type: "noul", instructions: "Should the on-call be paged right now?" },
+      first_move: {
+        type: "choice",
+        instructions: "What is the right first move?",
+        criteria: {
+          rollback: "Roll back the last deploy.",
+          restart: "Restart or redeploy the service.",
+          scale: "Add capacity.",
+          check_upstream: "Investigate the upstream dependency.",
+          watch: "Keep watching, no action yet.",
+        },
+      },
+    },
+  },
+  {
+    name: "GDPR / DSGVO classification",
+    model: "alias-clef",
+    stateMode: "json",
+    state: '{"record": {"name": "Anna Schmidt", "insurance_no": "4711-B", "diagnosis": "persistent headaches", "location": "Juelich", "institution": "FZJ"}}',
+    questions: {
+      personal_data: { type: "noul", instructions: "Does this record contain personal data under GDPR/DSGVO?" },
+      category: {
+        type: "choice",
+        instructions: "What is the most sensitive personal category present?",
+        criteria: {
+          identity: "Name, ID numbers, usernames.",
+          contact: "Address, email, phone.",
+          health: "Medical conditions, diagnoses, insurance health data.",
+          financial: "Salary, bank data, invoices.",
+          location: "Traces of where a person is or was.",
+          none: "No personal data at all.",
+        },
+      },
+      sensitivity: {
+        type: "score",
+        instructions: "What handling classification does this data require?",
+        criteria: ["Public", "Internal", "Confidential", "Strictly confidential"],
+      },
+    },
+  },
+  {
+    name: "ML experiment: what next?",
+    model: "alias-clef",
+    stateMode: "json",
+    state: '{"experiment": "Qwen3.8-27B LoRA on 3k EO captions", "metrics": {"train_loss": 0.21, "val_loss": 0.83}, "notes": "plateaued after epoch 3; qualitative outputs are generic"}',
+    questions: {
+      next_step: {
+        type: "choice",
+        instructions: "What should the researcher do next?",
+        criteria: {
+          more_data: "Curate and expand training data.",
+          tune_hparams: "Sweep LR, schedule, LoRA rank.",
+          fix_bug: "Something is wrong — pipeline, labels, or eval.",
+          scale_model: "Bigger backbone or full fine-tune.",
+          ship_it: "Good enough — deploy.",
+          abandon: "Stop — the premise is wrong.",
+        },
+      },
+      confidence: {
+        type: "score",
+        instructions: "How well does the evidence support that choice?",
+        criteria: ["Educated guess", "Medium confidence", "Strong evidence"],
+      },
+      needs_allocation: { type: "noul", instructions: "Does the next step need a new GPU allocation?" },
+    },
+  },
+  {
+    name: "Flaky vs real test failure",
+    model: "alias-clef",
+    stateMode: "text",
+    state: "test_engine.py::test_distributed_booster failed 3 of the last 20 CI runs on different nodes: assert tp_rank_output == expected, sometimes off by 1e-6. Passes locally 10/10.",
+    questions: {
+      flaky: { type: "noul", instructions: "Is this failure flaky rather than a real regression?" },
+      cause: {
+        type: "choice",
+        instructions: "What is the most likely root cause?",
+        criteria: {
+          flake_timing: "Timing or synchronization dependent.",
+          order_dependent: "Depends on test order or shared state.",
+          env_difference: "CI environment differs from dev (drivers, nodes).",
+          real_regression: "The product code is actually wrong.",
+          infra_glitch: "CI infrastructure glitch.",
+        },
+      },
+      fix_action: {
+        type: "choice",
+        instructions: "What should be done about it?",
+        criteria: {
+          rerun: "Just re-run the job.",
+          quarantine: "Quarantine the test, ticket it for later.",
+          fix_test: "Fix the test tolerance or setup.",
+          fix_code: "The product code is wrong — investigate now.",
+        },
+      },
+    },
+  },
+  {
+    name: "SLURM pre-flight check",
+    model: "alias-clef",
+    stateMode: "text",
+    state: "SBATCH: --nodes=2 --time=00:30:00 --gres=gpu:4 --mem=64G. Command: python train.py --batch-size 512. History: identical run OOM-killed at batch 384 last week; the dataset grew 30% since.",
+    questions: {
+      safe_to_submit: { type: "noul", instructions: "Will this job likely succeed as configured?" },
+      outcome: {
+        type: "score",
+        instructions: "How tight is this configuration?",
+        criteria: ["Fits comfortably", "Tight", "Guaranteed to die"],
+      },
+      likely_bottleneck: {
+        type: "choice",
+        instructions: "What will kill this job first if anything does?",
+        criteria: {
+          gpu_mem: "GPU memory — OOM on device.",
+          time_limit: "The time limit runs out first.",
+          cpu_ram: "Host RAM exhausted.",
+          storage_io: "Filesystem or data loading stalls.",
+          quota: "Project or accounting quota.",
+          none: "Nothing should kill it.",
+        },
+      },
+    },
+  },
+  {
+    name: "Content moderation",
+    model: "alias-clef",
+    stateMode: "text",
+    state: "User post: 'Here is how to make those idiots at the lab pay — I know where the admin's kid goes to school...'",
+    questions: {
+      safe: { type: "noul", instructions: "Is this content safe to publish as-is?" },
+      category: {
+        type: "choice",
+        instructions: "Which policy category does this hit hardest?",
+        criteria: {
+          violence_threat: "Threats of violence or intimidation.",
+          harassment: "Targeted abuse or bullying.",
+          hate: "Hate speech against a group.",
+          self_harm: "Self-harm or suicide content.",
+          sexual: "Sexual content.",
+          misinformation: "Demonstrably false harmful claims.",
+          pii_exposure: "Exposes private data about a person.",
+          ok: "No policy problem.",
+        },
+      },
+      severity: {
+        type: "score",
+        instructions: "How urgent is moderation?",
+        criteria: ["Benign", "Borderline", "Remove now"],
+      },
+    },
+  },
+  {
     name: "Blank starter",
     model: "alias-clef",
     stateMode: "text",
